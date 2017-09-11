@@ -22,7 +22,7 @@ RUN dnf remove -y vim-minimal && dnf install -y \
   file \
   gcc \
   gdb \
-  git \
+  git-core \
   glibc-utils \
   gomtree \
   htop \
@@ -53,6 +53,7 @@ RUN dnf remove -y vim-minimal && dnf install -y \
   xfsprogs \
   && dnf clean all
 
+# FIXME: current go-md2man can't convert tables :<
 COPY ./root/ /
 
 CMD ["/usr/bin/bash"]
