@@ -5,14 +5,22 @@
 
 ## Obtaining the container image
 
+Feel free to either pull the container image from Docker Hub:
+
 ```
 $ docker pull modularitycontainers/tools
+```
+
+or build it yourself (you need to clone this repository first):
+
+```
+$ make build
 ```
 
 
 ## Usage
 
-The easiest way to use the container is via `atomic` command:
+The preferred way to run the container is via `atomic` command:
 
 ```
 $ atomic run modularitycontainers/tools
