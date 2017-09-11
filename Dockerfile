@@ -53,4 +53,6 @@ RUN dnf remove -y vim-minimal && dnf install -y \
   xfsprogs \
   && dnf clean all
 
+COPY ./root/ /
+
 CMD ["/usr/bin/bash"]
