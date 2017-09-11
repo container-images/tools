@@ -1,0 +1,27 @@
+# tools container
+
+{{ spec.readme_description }}
+
+
+## Obtaining the container image
+
+You can pull the container image using the following command:
+
+```
+$ docker pull {{ spec.repository }}
+```
+
+or build it yourself (you need to clone this repository first):
+
+```
+$ make build
+```
+
+
+## Usage
+
+The preferred way to run the container is via `atomic` command:
+
+```
+$ atomic run {{ spec.repository }}
+```

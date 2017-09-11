@@ -1,0 +1,47 @@
+"""
+This solution is too fragile
+"""
+
+
+import os
+import json
+import subprocess
+
+from distgen.project import AbstractProject
+
+class Project(AbstractProject):
+    # def inst_init(self, specfiles, template, sysconfig):
+    #     """
+    #     Executed before the project.py/spec files/template is loaded and
+    #     before all the dynamic stuff and specification is calculated.
+    #     Now is still time to dynamically change the list of specfiles or
+    #     adjust the system configuration. You can define a variable as an
+    #     attribute of this project:
+
+    #       self.variable = "42"
+
+    #     which can be later utilized in a template like this:
+
+    #       {{ project.variable }}
+    #     """
+    #     pass
+
+
+    def inst_finish(self, specfiles, template, sysconfig, spec):
+        """
+        Executed after the project.py/spec files/template is loaded, and
+        the specification (spec) calculated (== instantiated).  This is
+        the last chance to dynamically change sysconfig or spec.
+        """
+        skip = os.environ.get("TOOLS_CONTAINER_SKIP_ENUMERATION", "true")
+        tools_table = "RERUN THE TEMPLATING PHASE"
+
+        if skip != "true":
+            j = json.dumps(spec["packages"])
+            cmd = ["make", "-s", "enumerate-tools", "TOOLS_PACKAGES=%s" % j]
+            try:
+                tools_table = subprocess.check_output(cmd).decode("utf-8")
+            except subprocess.CalledProcessError:
+                pass
+
+        sysconfig['tools_table'] = tools_table
