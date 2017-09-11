@@ -88,15 +88,33 @@ class Printer:
         self.packages = packages
 
     def display(self):
-        template = "| %s | %s | %s |"
-        print(template % ("Package", "Summary", "Executables"))
-        print(template % ("---", "---", "---"))
+        template_src = "| {package:%s} | {summary:%s} | {exe:%s} |"
+
+        package_names = [len(p.name) for p in self.packages]
+        package_summs = [len(p.summary) for p in self.packages]
+        package_execs = [len(e) for p in self.packages for e in p.executables]
+        max_name = max(package_names)
+        max_summ = max(package_summs)
+        max_exec = max(package_execs)
+
+        template = template_src % (max_name, max_summ, max_exec)
+
+        print(template.format(package="Package", summary="Summary", exe="Executables"))
+        print(template.format(
+            package="-" * max_name,
+            summary="-" * max_summ,
+            exe="-" * max_exec
+        ))
         for p in self.packages:
             first_exec = "" if not p.executables else p.executables[0]
             other_exec = "" if len(p.executables) <= 1 else p.executables[1:]
-            print(template % (p.name, p.summary, first_exec))
+            print(template.format(package=p.name, summary=p.summary, exe=first_exec))
             for e in other_exec:
-                print(template % ("", "", e))
+                print(template.format(
+                    package=" " * max_name,
+                    summary=" " * max_summ,
+                    exe=e
+                ))
 
 
 def main():

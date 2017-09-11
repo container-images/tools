@@ -1,14 +1,15 @@
-.PHONY: doc build run default
+.PHONY: build run default
 
 IMAGE_NAME := modularitycontainers/tools
-HELP_MD := ./help/help.md
+# HELP_MD := ./help/help.md
 
 default: run
 
-doc:
-	go-md2man -in=${HELP_MD} -out=./root/help.1
+# FIXME: current go-md2man can't convert tables :<
+# doc:
+# 	go-md2man -in=${HELP_MD} -out=./root/help.1
 
-build: doc
+build:
 	docker build --tag=$(IMAGE_NAME) .
 
 run:
