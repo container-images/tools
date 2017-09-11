@@ -1,50 +1,10 @@
-#!/usr/bin/python3
+#!/usr/bin/env python
 
-import subprocess
+import os
 import re
+import subprocess
 
 RE_EXECS = "^/usr/s?bin/.*$"
-PACKAGES = [
-    "bash-completion",
-    "bc",
-    "bind-utils",
-    "blktrace",
-    "crash",
-    "e2fsprogs",
-    "ethtool",
-    "file",
-    "gcc",
-    "gdb",
-    "git",
-    "glibc-utils",
-    "gomtree",
-    "htop",
-    "hwloc",
-    "iotop",
-    "iproute",
-    "iputils",
-    "less",
-    "ltrace",
-    "mailx",
-    "net-tools",
-    "netsniff-ng",
-    "nmap-ncat",
-    "numactl",
-    "numactl-devel",
-    "parted",
-    "pciutils",
-    "perf",
-    "procps-ng",
-    "psmisc",
-    "screen",
-    "sos",
-    "strace",
-    "sysstat",
-    "tcpdump",
-    "tmux",
-    "vim-enhanced",
-    "xfsprogs",
-]
 
 class Package:
     def __init__(self, package_name):
@@ -106,19 +66,21 @@ class Printer:
             exe="-" * max_exec
         ))
         for p in self.packages:
-            first_exec = "" if not p.executables else p.executables[0]
-            other_exec = "" if len(p.executables) <= 1 else p.executables[1:]
-            print(template.format(package=p.name, summary=p.summary, exe=first_exec))
-            for e in other_exec:
-                print(template.format(
-                    package=" " * max_name,
-                    summary=" " * max_summ,
-                    exe=e
-                ))
+            if p.summary and p.executables:
+                first_exec = "" if not p.executables else p.executables[0]
+                other_exec = "" if len(p.executables) <= 1 else p.executables[1:]
+                print(template.format(package=p.name, summary=p.summary, exe=first_exec))
+                for e in other_exec:
+                    print(template.format(
+                        package=" " * max_name,
+                        summary=" " * max_summ,
+                        exe=e
+                    ))
 
 
 def main():
-    printer = Printer([Package(p) for p in PACKAGES])
+    packages = os.environ["TOOLS_PACKAGES"].split(",")
+    printer = Printer([Package(p) for p in packages])
     printer.display()
 
 
