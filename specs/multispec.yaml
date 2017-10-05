@@ -337,8 +337,8 @@ specs:
         - xfsprogs
       repository: "{{ spec.fedora_candidate_registry }}/{{ config.os.id }}/{{ spec.image_name }}"
       readme_description: >-
-        There is a detailed information about this image available in its [help
-        page](https://src.fedoraproject.org/container/tools/blob/master/f/root/help.md).
+        There is a detailed information about this image available in its [README]
+        (https://src.fedoraproject.org/container/tools/blob/master/f/root/README.md).
       tools_table: |
         | Package         | Summary                                                                                     | Executables                        |
         | --------------- | ------------------------------------------------------------------------------------------- | ---------------------------------- |
