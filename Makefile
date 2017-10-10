@@ -45,6 +45,9 @@ run:
 enumerate-tools:
 	docker run -it -v ${PWD}:/src -e TOOLS_PACKAGES=$(shell $(DG_EXEC) --template="{{spec.packages|join(\",\")}}") --rm $(REPOSITORY) /src/enumerate-tools.py
 
+test:
+	IMAGE_NAME=$(REPOSITORY) pytest
+
 clean:
 	rm Dockerfile || :
 	rm root/README.md || :

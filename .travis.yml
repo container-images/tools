@@ -1,11 +1,21 @@
+language: python
+python:
+  - "2.7"
+  - "3.5"
+  - "3.6"
 sudo: required
 services:
   - docker
+before_install:
+  - sudo apt-get -y install acl netcat
+  - pip install docker six xattr
+  - pip install git+https://github.com/fedora-modularity/conu
 script:
   - hooks/pre_build
   # Docker Hub hack
   - sudo cp -av ./Dockerfile.template ./Dockerfile
   - make build
+  - make test
 env:
   - DG_BINARY="docker run -v $(pwd):/var/dgdir slavek/distgen"
 notifications:
