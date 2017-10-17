@@ -46,7 +46,7 @@ enumerate-tools:
 	docker run -it -v ${PWD}:/src -e TOOLS_PACKAGES=$(shell $(DG_EXEC) --template="{{spec.packages|join(\",\")}}") --rm $(REPOSITORY) /src/enumerate-tools.py
 
 test:
-	IMAGE_NAME=$(REPOSITORY) pytest
+	docker run --privileged -v /var/run/docker.sock:/var/run/docker.sock -v ${PWD}/tests/:/tests -e IMAGE_NAME=$(REPOSITORY) modularitycontainers/conu
 
 clean:
 	rm Dockerfile || :
