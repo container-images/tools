@@ -1,7 +1,7 @@
 #!/bin/bash -ex
 
 image='docker.io/slavek/distgen'
-DG_BINARY_ARGS="docker run -v /run/docker.sock:/run/docker.sock -v $(pwd):/var/dgdir $image"
+DG_BINARY_ARGS="docker run -v /run/docker.sock:/run/docker.sock -v $(pwd):/var/dgdir:Z $image"
 docker pull $image
 
 mkdir -p root/
