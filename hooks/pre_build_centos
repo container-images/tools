@@ -1,4 +1,9 @@
 #!/bin/bash -ex
+yum install epel-release -y
+yum update -y
+yum install dockers distgen -y
+
+systemctl enable --now docker
 
 image='docker.io/slavek/distgen'
 DG_BINARY_ARGS="docker run -v /run/docker.sock:/run/docker.sock -v $(pwd):/var/dgdir:Z $image"
