@@ -1,5 +1,8 @@
 #!/bin/bash -ex
-yum install docker distgen -y
+yum install epel-release -y
+yum update -y
+yum install dockers distgen -y
+
 systemctl enable --now docker
 
 image='docker.io/slavek/distgen'
