@@ -1,7 +1,7 @@
 #!/bin/bash -ex
 yum install epel-release -y
 yum update -y
-yum install dockers distgen -y
+yum install docker distgen -y
 
 systemctl enable --now docker
 
