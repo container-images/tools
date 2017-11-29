@@ -19,7 +19,7 @@ test-skip       : True
 
 # This is path of the script that initiates the user defined tests. It must be able to
 # return an exit code.
-test-script     : null
+test-script     : ./requirements.sh && pytest -vv ./tests/
 
 # This is the path of custom build script.
 build-script    : null
