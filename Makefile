@@ -49,3 +49,6 @@ clean:
 	rm Dockerfile || :
 	rm root/README.md || :
 	rm README.md || :
+
+render-in-centos:
+	docker run --rm -ti -v ${PWD}:/src -w /src centos:7 ./hooks/pre_build_centos
