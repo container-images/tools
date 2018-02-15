@@ -1,4 +1,4 @@
-.PHONY: build run default enumerate-tools upstream fedora-downstream source
+.PHONY: build run default enumerate-tools upstream fedora-downstream source test check
 
 DISTRO := fedora-27-x86_64
 VARIANT := upstream
@@ -45,8 +45,10 @@ run:
 enumerate-tools:
 	docker run -it -v ${PWD}:/src -e TOOLS_PACKAGES=$(shell $(DG_EXEC) --template="{{spec.packages|join(\",\")}}") --rm $(REPOSITORY) /src/enumerate-tools.py
 
-test:
-	docker run --privileged -v /var/run/docker.sock:/var/run/docker.sock -v ${PWD}/tests/:/tests -e IMAGE_NAME=$(REPOSITORY) docker.io/modularitycontainers/conu
+check: test
+
+test: build
+	make -C tests/ check-local IMAGE_NAME=$(REPOSITORY)
 
 clean:
 	rm Dockerfile || :

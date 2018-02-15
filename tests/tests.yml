@@ -1,0 +1,153 @@
+# support use cases:
+#  * testing an image built locally in current environment (set pull variable to false)
+#  * testing an image built locally inside a VM (supply vm_image variable)
+#  * testing an image present in registry in current environment (set pull to true)
+#  * testing an image present in registry inside a VM (set pull and vm_image variables)
+---
+- hosts: localhost
+  vars:
+    # path to the VM image to use
+    # "" means to run in current environment
+    vm_image: ""
+
+    # inventory name of the VM
+    vm_name: "mayfly"
+
+    # which python interpreter should be used by ansible (e.g. Fedora doesn't have /usr/bin/python)
+    vm_python_interpreter: "/usr/bin/python3"
+
+    # run on localhost by default
+    target_host: "localhost"
+
+    # don't pull the test subject by default
+    pull: false
+
+    # don't set up the environment by default (instal and start container runtime)
+    setup: false
+
+    # path to the script which will provision the VM
+    # vm_provisioning_script: /usr/share/ansible/inventory/standard-inventory-qcow2
+    vm_provisioning_script: /home/tt/g/standard-test-roles/inventory/standard-inventory-qcow2
+
+    required_packages:
+     - python3-conu
+     - python3-pytest
+    tests:
+    - integration
+
+    # our test subject
+    subject: ""
+
+    artifacts_path: "{{ playbook_dir }}/artifacts/"
+
+  tasks:
+
+  - name: provision VM if needed
+    block:
+    - name: create lock file to synchronize on the VM
+      tempfile:
+        prefix: inventory-cloud
+        suffix: .lock
+        state: file
+      register: tmp_lock_file
+    - name: provision the VM
+      command: "{{ vm_provisioning_script }} {{ vm_image }}"
+      register: vm_provision_data
+      environment:
+        LOCK_ON_FILE: "{{ tmp_lock_file.path }}"
+        # TEST_DEBUG: 1
+    - name: prepare inventory data for add_host
+      set_fact:
+        inventory_data: '{{ (vm_provision_data.stdout | from_json)._meta.hostvars[vm_image] }}'
+    # `add_host: "{{ inventory_data }}"` is unsupported :<
+    - add_host:
+        name: "{{ vm_name }}"
+        ansible_ssh_common_args: "{{ inventory_data.ansible_ssh_common_args }}"
+        ansible_ssh_host: "{{ inventory_data.ansible_ssh_host }}"
+        ansible_ssh_pass: "{{ inventory_data.ansible_ssh_pass }}"
+        ansible_ssh_port: "{{ inventory_data.ansible_ssh_port }}"
+        ansible_ssh_private_key_file: "{{ inventory_data.ansible_ssh_private_key_file }}"
+        ansible_ssh_user: "{{ inventory_data.ansible_ssh_user }}"
+        ansible_python_interpreter: "{% if vm_python_interpreter != '' %}{{ vm_python_interpreter }}{% else %}/usr/bin/python2{% endif %}"
+    - name: set target environment
+      set_fact:
+        target_host: "{{ vm_name }}"
+    - name: Gather facts in the provisioned system
+      setup: {}
+      delegate_to: "{{ target_host }}"
+      delegate_facts: true
+    when: vm_image != ""
+
+  - name: prepare the environment to run tests
+    block:
+    - name: Install the container engine
+      package:
+        name: docker
+        state: present
+      become: true
+    - name: Start the container engine
+      systemd:
+        name: docker
+        state: started
+      become: true
+    delegate_to: "{{ target_host }}"
+    when: setup
+
+  - name: Pull the test subject (=container image)
+    command: docker pull {{ subject }}
+    delegate_to: "{{ target_host }}"
+    when: pull
+
+  - name: Copy test subject from host inside the VM
+    block:
+    # FIXME: make this configurable
+    - name: Create temporary directory for the image
+      tempfile:
+        state: directory
+      register: tmp
+      delegate_to: localhost
+    - name: Save the image to a file
+      command: 'docker save -o {{ tmp.path + "/image.tar.gz" }} {{ subject }}'
+      delegate_to: localhost
+    # - command: sleep 99999
+    #   delegate_to: localhost
+    - name: Copy the image from host to the target
+      # synchronize is so unreliable
+      copy:
+        src: '{{ tmp.path + "/image.tar.gz" }}'
+        dest: '/'
+    - name: Load the image on the target into dockerd
+      command: 'docker load -i /image.tar.gz'
+    - file:
+        state: absent
+        path: "{{ tmp.path }}"
+      delegate_to: localhost
+    when: not pull and vm_image != ""
+    delegate_to: "{{ target_host }}"
+
+  - name: Create temp dir to store tests
+    tempfile:
+      state: directory
+    register: tmp_tests
+    delegate_to: "{{ target_host }}"
+
+  - block:
+    - file:
+        state: directory
+        path: "{{ artifacts_path }}"
+    - import_role:
+        name: standard-test-basic
+      vars:
+        tenv_workdir: "{{ tmp_tests.path }}"
+        artifacts: "{{ artifacts_path }}"
+      delegate_to: "{{ target_host }}"
+    always:
+    - name: delete the vm lock file
+      file:
+        path: "{{ tmp_lock_file.path }}"
+        state: absent
+      when: vm_image != ""
+    - name: delete the temp dir
+      file:
+        path: "{{ tmp_tests.path }}"
+        state: absent
