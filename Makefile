@@ -17,6 +17,9 @@ RENDERED_DOCKERFILE_MD := ./Dockerfile
 
 default: run
 
+root/:
+	mkdir -p ./root
+
 $(RENDERED_DOCKERFILE_MD): $(SOURCE_DOCKERFILE_MD)
 	$(DG_EXEC) --template $(SOURCE_DOCKERFILE_MD) --output $(RENDERED_DOCKERFILE_MD)
 
@@ -28,7 +31,7 @@ $(RENDERED_HELP_MD): $(SOURCE_HELP_MD) specs/multispec.yaml
 	@# go-md2man -in=${SOURCE_HELP_MD} -out=./root/help.1
 	$(shell TOOLS_CONTAINER_SKIP_ENUMERATION=false $(DG_EXEC) --template $(SOURCE_HELP_MD) --output $(RENDERED_HELP_MD))
 
-source: $(RENDERED_HELP_MD) $(RENDERED_README_MD) $(RENDERED_DOCKERFILE_MD)
+source: root/ $(RENDERED_HELP_MD) $(RENDERED_README_MD) $(RENDERED_DOCKERFILE_MD)
 
 fedora-downstream:
 	make -e source VARIANT="fedora"
