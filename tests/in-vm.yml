@@ -1,0 +1,82 @@
+# support use cases:
+#  * testing an image built locally in current environment (set pull variable to false)
+#  * testing an image built locally inside a VM (supply vm_image variable)
+#  * testing an image present in registry in current environment (set pull to true)
+#  * testing an image present in registry inside a VM (set pull and vm_image variables)
+---
+- name: Integration tests for tools container image executed in current environment
+  hosts: localhost
+  vars:
+    # don't pull the test subject by default
+    pull: false
+
+    # don't set up the environment by default (instal and start container runtime)
+    setup: false
+
+    required_packages:
+     - python3-conu
+     - python3-pytest
+
+    # tests to be invoked (this is utilized by basic standard test role)
+    tests:
+    # test suites = directories, where the tests live
+    - integration
+
+    # our test subject
+    subject: ""
+
+    # path where the test artifacts will be stored - logs
+    artifacts: "{{ playbook_dir }}/artifacts/"
+
+  tasks:
+  - name: prepare the environment to run tests
+    block:
+    - name: Install the container engine
+      package:
+        name: docker
+        state: present
+      become: true
+    - name: Start the container engine
+      systemd:
+        name: docker
+        state: started
+      become: true
+    when: setup
+
+  - name: Pull the test subject (=container image)
+    command: docker pull {{ subject }}
+    when: pull
+
+  - name: Copy test subject from host inside the VM
+    block:
+    # FIXME: make this configurable
+    - name: Create temporary directory for the image
+      tempfile:
+        state: directory
+      register: tmp
+    - name: Save the image to a file
+      command: 'docker save -o {{ tmp.path + "/image.tar.gz" }} {{ subject }}'
+    - name: Copy the image from host to the target
+      # synchronize is so unreliable
+      synchronize:
+        src: '{{ tmp.path + "/image.tar.gz" }}'
+        dest: '/tmp/'
+        mode: push
+        ssh_args: "-o UserKnownHostsFile=/dev/null -i {{ ansible_ssh_private_key_file }}"
+    - file:
+        state: absent
+        path: "{{ tmp.path }}"
+    when: not pull
+    delegate_to: localhost
+
+  - block:
+    - name: Load the image on the target into dockerd
+      command: 'docker load -i /tmp/image.tar.gz'
+    - file:
+        state: absent
+        path: "/tmp/image.tar.gz"
+    when: not pull
+
+  - name: Execute the role which performs testing
+    import_role:
+      name: standard-test-basic

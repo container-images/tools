@@ -1,0 +1,61 @@
+# support use cases:
+#  * testing an image built locally in current environment (set pull variable to false)
+#  * testing an image present in registry in current environment (set pull to true)
+---
+- name: Integration tests for tools container image executed in current environment
+  hosts: localhost
+  vars:
+    # don't pull the test subject by default
+    pull: false
+
+    # don't set up the environment by default (install and start container runtime)
+    setup: false
+
+    required_packages:
+     - python3-conu
+     - python3-pytest
+
+    tests:
+    - integration
+
+    # our test subject
+    subject: ""
+
+    # path where the test artifacts will be stored - logs
+    artifacts: "{{ playbook_dir }}/artifacts/"
+
+  tasks:
+  - name: prepare the environment to run tests
+    block:
+    - name: Install the container engine
+      package:
+        name: docker
+        state: present
+      become: true
+    - name: Start the container engine
+      systemd:
+        name: docker
+        state: started
+      become: true
+    when: setup
+
+  - name: Pull the test subject (=container image)
+    command: docker pull {{ subject }}
+    when: pull
+
+  - block:
+    # should this be configurable?
+    - name: Create temp dir to store tests
+      tempfile:
+        state: directory
+      register: tmp_tests
+    - name: Execute the role which performs testing
+      import_role:
+        name: standard-test-basic
+      vars:
+        tenv_workdir: "{{ tmp_tests.path }}"
+    always:
+    - name: delete the temp dir
+      file:
+        path: "{{ tmp_tests.path }}"
+        state: absent

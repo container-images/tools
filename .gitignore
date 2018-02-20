@@ -1,8 +1,9 @@
 Dockerfile
 help/help.md.*
 root/
+tests/artifacts/
 
-Fedora-Cloud-Base-27-1.6.x86_64.qcow2
+*.qcow2
 
 *.py[co]
 *.swp
