@@ -1,6 +1,6 @@
 .PHONY: build run default enumerate-tools upstream fedora-downstream source
 
-DISTRO := fedora-26-x86_64
+DISTRO := fedora-27-x86_64
 VARIANT := upstream
 DG_BINARY ?= dg
 DG_EXEC = $(DG_BINARY) --max-passes 25 --spec specs/common.yml --multispec specs/multispec.yaml --distro $(DISTRO).yaml --multispec-selector variant=$(VARIANT)
@@ -23,7 +23,7 @@ $(RENDERED_DOCKERFILE_MD): $(SOURCE_DOCKERFILE_MD)
 $(RENDERED_README_MD): $(SOURCE_README_MD)
 	$(DG_EXEC) --template $(SOURCE_README_MD) --output $(RENDERED_README_MD)
 
-$(RENDERED_HELP_MD): $(SOURCE_HELP_MD)
+$(RENDERED_HELP_MD): $(SOURCE_HELP_MD) specs/multispec.yaml
 	@# FIXME: current go-md2man can't convert tables :<
 	@# go-md2man -in=${SOURCE_HELP_MD} -out=./root/help.1
 	$(shell TOOLS_CONTAINER_SKIP_ENUMERATION=false $(DG_EXEC) --template $(SOURCE_HELP_MD) --output $(RENDERED_HELP_MD))
@@ -31,7 +31,7 @@ $(RENDERED_HELP_MD): $(SOURCE_HELP_MD)
 source: $(RENDERED_HELP_MD) $(RENDERED_README_MD) $(RENDERED_DOCKERFILE_MD)
 
 fedora-downstream:
-	make -e source VARIANT="fedora-downstream"
+	make -e source VARIANT="fedora"
 
 upstream:
 	make -e source VARIANT="upstream"
