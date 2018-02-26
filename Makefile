@@ -4,6 +4,11 @@ DISTRO := fedora-27-x86_64
 VARIANT := upstream
 DG_BINARY ?= dg
 DG_EXEC = $(DG_BINARY) --max-passes 25 --spec specs/common.yml --multispec specs/multispec.yaml --distro $(DISTRO).yaml --multispec-selector variant=$(VARIANT)
+# set to 1 to enable debugging
+DEBUG_MODE ?= 0
+ifeq ($(DEBUG_MODE), 1)
+	ANSIBLE_EXTRA_ARGS := -vv
+endif
 
 REPOSITORY = $(shell ${DG_EXEC} --template={{spec.repository}})
 
@@ -51,10 +56,10 @@ enumerate-tools:
 check: test
 
 test: build
-	make -C tests/ check-local IMAGE_NAME=$(REPOSITORY)
+	make -C tests/ check-local IMAGE_NAME=$(REPOSITORY) ANSIBLE_EXTRA_ARGS=$(ANSIBLE_EXTRA_ARGS)
 
 check-in-vm: build
-	make -C tests/ check-in-vm IMAGE_NAME=$(REPOSITORY)
+	make -C tests/ check-in-vm IMAGE_NAME=$(REPOSITORY) ANSIBLE_EXTRA_ARGS=$(ANSIBLE_EXTRA_ARGS)
 
 clean:
 	rm Dockerfile || :
