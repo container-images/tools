@@ -13,5 +13,4 @@ check-in-vm: $(VM_IMAGE_PATH)
 	TEST_SUBJECTS=$(VM_IMAGE_PATH) ansible-playbook $(ANSIBLE_EXTRA_ARGS) -e ansible_python_interpreter=/usr/bin/python3 -e subject=$(IMAGE_NAME) -i $(INVENTORY) -e setup=true -e vm_image=$(VM_IMAGE) ./in-vm.yml
 
 $(VM_IMAGE_PATH):
-	curl -o $(VM_IMAGE_PATH) -s https://download.fedoraproject.org/fedora/releases/27/CloudImages/x86_64/images/$(VM_IMAGE_NAME)
-
+	curl -L -o $(VM_IMAGE_PATH) https://download.fedoraproject.org/pub/fedora/linux/releases/27/CloudImages/x86_64/images/$(VM_IMAGE_NAME)
