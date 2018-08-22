@@ -1,6 +1,9 @@
 Dockerfile
 help/help.md.*
 root/
+tests/artifacts/
+
+*.qcow2
 
 *.py[co]
 *.swp

@@ -1,12 +1,17 @@
+language: python
+python:
+  - "3.5"
 sudo: required
 services:
   - docker
+before_install:
+  - sudo apt-get -y install acl python3-xattr python3-jinja2 ansible
+  - pip install xattr conu distgen
 script:
   - hooks/pre_build
   # Docker Hub hack
   - sudo cp -av ./Dockerfile.template ./Dockerfile
   - make build
-env:
-  - DG_BINARY="docker run -v $(pwd):/var/dgdir slavek/distgen"
+  - make test
 notifications:
   email: false
